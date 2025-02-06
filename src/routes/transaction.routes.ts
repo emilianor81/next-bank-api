@@ -41,6 +41,7 @@ router.use(cardValidationMiddleware as RequestHandler);
 
 router.post(
   '/transfer',
+  authMiddleware as RequestHandler,
   validateRequest({
     body: {
       amount: { type: 'number', required: true, min: 1 },
