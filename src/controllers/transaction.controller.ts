@@ -158,7 +158,9 @@ export class TransactionController {
   // Realizar una transferencia
     static async transfer(req: Request, res: Response): Promise<void> {
       try {
-        const { amount, destinationIban } = req.body;
+
+
+        const { amount, destinationIban, description } = req.body;
         const { accountId } = req.user!;
         const card = req.card; // Viene del middleware de validación
   
@@ -187,48 +189,43 @@ export class TransactionController {
           destinationAccount.bank
         );
         const totalAmount = amount + commission;
-  
-        // Validar límites según tipo de tarjeta
-        if (card.type === 'debit') {
-          if (sourceAccount.balance < totalAmount) {
-            res.status(400).json({ message: 'Saldo insuficiente' });
-            return
-          }
-        } else { // tarjeta de crédito
-          if (totalAmount > card.creditLimit!) {
-            res.status(400).json({ message: 'Excede el límite de crédito' });
-            return
-          }
+        if (sourceAccount.balance < totalAmount) {
+          res.status(400).json({ message: 'Saldo insuficiente' });
+          return
         }
-  
         // Crear transacción con comisión
         const transaction = new Transaction({
           type: 'transfer',
           amount,
-          fromAccount: accountId,
+          account: sourceAccount._id,
           toAccount: destinationAccount._id,
           atmBank: sourceAccount.bank,
-          commission
+          commission,
+          description: description
         });
-  
-        // Actualizar saldos
-        sourceAccount.balance -= totalAmount;
-        destinationAccount.balance += amount;
-  
         await Promise.all([
           transaction.save(),
-          sourceAccount.save(),
-          destinationAccount.save()
+          Account.findByIdAndUpdate(
+            sourceAccount._id,
+            { $inc: { balance: -(amount + commission) } },
+            { new: true }
+          ),
+          Account.findByIdAndUpdate(
+            destinationAccount._id,
+            { $inc: { balance: amount } },
+            { new: true }
+          )
         ]);
-  
+
         res.json({
           message: 'Transferencia exitosa',
           transaction,
-          newBalance: sourceAccount.balance,
+          newBalance: sourceAccount.balance - totalAmount,
           commission
         });
+
       } catch (error) {
-        res.status(500).json({ message: 'Error al procesar la transferencia' });
+        res.status(500).json({ message: 'Error al procesar la transferencia', error: error });
       }
     }
 }
