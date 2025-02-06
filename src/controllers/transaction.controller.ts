@@ -129,7 +129,7 @@ export class TransactionController {
       const transaction = new Transaction({
         type: 'deposit',
         amount,
-        fromAccount: accountId,
+        account: accountId,
         atmBank,
         commission: 0
       });
@@ -138,7 +138,11 @@ export class TransactionController {
 
       await Promise.all([
         transaction.save(),
-        account.save()
+        Account.findByIdAndUpdate(
+          account._id,
+          { $inc: { balance: amount } },
+          { new: true }
+        )
       ]);
 
       res.json({
