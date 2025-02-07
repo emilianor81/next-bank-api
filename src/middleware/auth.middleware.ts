@@ -40,6 +40,14 @@ export const authMiddleware = async (
     }
     req.card = card;
     
+    if (card.isActivated && !card.initialPinChanged && 
+      !req.path.includes('/change-pin')) {
+        res.status(403).json({ 
+          message: 'Debe cambiar el PIN inicial antes de realizar otras operaciones'
+        });
+        return;
+      }
+      
     next();
   } catch (error) {
     res.status(401).json({ message: 'Token inválido' });
