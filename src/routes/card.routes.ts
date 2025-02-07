@@ -38,6 +38,11 @@ router.put(
   }) as RequestHandler,
   CardController.updateWithdrawLimit as RequestHandler
 );
+router.get(
+  '/withdraw-limit',
+  authMiddleware as RequestHandler,
+  CardController.getWithdrawLimit as RequestHandler
+);
 
 router.post(
   '/',
