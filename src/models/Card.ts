@@ -11,6 +11,7 @@ export interface ICard extends Document {
   account: Schema.Types.ObjectId;
   user: Schema.Types.ObjectId;
   verifyPin: (pin: string) => Promise<boolean>;
+  initialPinChanged: boolean;
 }
 
 const CardSchema = new Schema<ICard>({
@@ -52,6 +53,10 @@ const CardSchema = new Schema<ICard>({
     ref: 'User',
     required: true,
   },
+  initialPinChanged: {
+    type: Boolean,
+    default: false
+  }
 }, { timestamps: true });
 
 CardSchema.pre('save', async function(next) {
