@@ -98,4 +98,23 @@ export class CardController {
       res.status(500).json({ message: 'Error al crear la tarjeta' });
     }
   }
+
+  static async getWithdrawLimit(req: AuthRequest, res: Response) {
+    try {
+      const cardId = req.user.cardId;
+      
+      const card = await Card.findById(cardId);
+      if (!card) {
+        res.status(404).json({ message: 'Tarjeta no encontrada' });
+        return;
+      }
+  
+      res.status(200).json({ 
+        message: 'Límite de retiro actual',
+        withdrawLimit: card.withdrawLimit 
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Error al obtener el límite de retiro' });
+    }
+  }
 }
